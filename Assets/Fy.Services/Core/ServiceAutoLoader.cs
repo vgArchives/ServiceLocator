@@ -54,7 +54,7 @@ namespace Fy.Services
                     continue;
                 }
 
-                if (!HasFactory(type))
+                if (!ServiceLocator.HasFactory(type))
                 {
                     Debug.LogError($"Required service '{type.Name}' has no registered factory; " +
                                    $"GetChecked will fail at runtime. Provide an implementation or " +
@@ -146,7 +146,7 @@ namespace Fy.Services
 
         private static void RegisterDefaultFactory(Type serviceInterface, Type cls)
         {
-            if (HasFactory(serviceInterface))
+            if (ServiceLocator.HasFactory(serviceInterface))
             {
                 return;
             }
@@ -158,40 +158,21 @@ namespace Fy.Services
                 : typeof(DefaultServiceFactory<>);
 
             Type closedFactory = openFactory.MakeGenericType(cls);
-            object factoryInstance = closedFactory
+            var factoryInstance = (IServiceFactory)closedFactory
                 .GetField("Instance", BindingFlags.Public | BindingFlags.Static)
                 .GetValue(null);
 
-            MethodInfo setFactory = typeof(ServiceLocator)
-                .GetMethod(nameof(ServiceLocator.SetFactory))
-                .MakeGenericMethod(serviceInterface);
-
-            setFactory.Invoke(null, new[] { factoryInstance });
-        }
-        
-        private static bool HasFactory(Type serviceInterface)
-        {
-            MethodInfo hasFactory = typeof(ServiceLocator)
-                .GetMethod(nameof(ServiceLocator.HasFactory))
-                .MakeGenericMethod(serviceInterface);
-
-            return (bool)hasFactory.Invoke(null, null);
+            ServiceLocator.SetFactory(serviceInterface, factoryInstance);
         }
 
         private static void Preload(Type serviceInterface)
         {
-            bool isRequired = serviceInterface.GetCustomAttribute<RequiredServiceAttribute>() != null;
-            
-            string methodName = isRequired
-                ? nameof(ServiceLocator.GetChecked)
-                : nameof(ServiceLocator.TryGet);
+            IService service = ServiceLocator.GetService(serviceInterface);
 
-            MethodInfo resolve = typeof(ServiceLocator)
-                .GetMethod(methodName)
-                .MakeGenericMethod(serviceInterface);
-
-            object[] args = isRequired ? null : new object[1];
-            resolve.Invoke(null, args);
+            if (service == null && serviceInterface.GetCustomAttribute<RequiredServiceAttribute>() != null)
+            {
+                throw new InvalidOperationException($"Required service '{serviceInterface.Name}' missing.");
+            }
         }
 
         private static Type[] SafeGetTypes(Assembly asm)

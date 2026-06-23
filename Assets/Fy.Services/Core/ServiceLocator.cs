@@ -45,18 +45,17 @@ namespace Fy.Services
         
         public static void SetFactory<T>(IServiceFactory factory) where T : class, IService
         {
-            Initialize(typeof(T), out ServiceWrapper service);
-            service.Factory = factory;
+            SetFactory(typeof(T), factory);
         }
-        
+
         public static bool HasFactory<T>() where T : class, IService
         {
-            return Services.TryGetValue(typeof(T), out ServiceWrapper service) && service.Factory != null;
+            return HasFactory(typeof(T));
         }
-        
+
         public static bool TryGet<T>(out T service) where T : class, IService
         {
-            service = GetService<T>();
+            service = (T)GetService(typeof(T));
             return service != null;
         }
 
@@ -70,14 +69,55 @@ namespace Fy.Services
                                  $"use TryGet for optional services.");
             }
             
-            T value = GetService<T>(service);
-            
+            var value = (T)GetService(typeof(T));
+
             if (value == null)
             {
                 throw new InvalidOperationException($"Required service '{typeof(T).Name}' missing.");
             }
-            
+
             return value;
+        }
+
+        internal static void SetFactory(Type type, IServiceFactory factory)
+        {
+            Initialize(type, out ServiceWrapper service);
+            service.Factory = factory;
+        }
+
+        internal static bool HasFactory(Type type)
+        {
+            return Services.TryGetValue(type, out ServiceWrapper service) && service.Factory != null;
+        }
+
+        internal static IService GetService(Type type)
+        {
+            Initialize(type, out ServiceWrapper serviceWrapper);
+
+            if (serviceWrapper.Value.TryGetValid(out IService validService))
+            {
+                return validService;
+            }
+
+            if (serviceWrapper.Factory == null)
+            {
+                return null;
+            }
+
+            IService createdService = serviceWrapper.Factory.GetService();
+
+            if (createdService.TryGetValid(out validService) && type.IsInstanceOfType(validService))
+            {
+                if (serviceWrapper.Factory.ShouldSetService)
+                {
+                    serviceWrapper.Value = validService;
+                }
+
+                return validService;
+            }
+
+            createdService?.Dispose();
+            return null;
         }
 
         internal static IEnumerable<ServiceSnapshot> EnumerateServices()
@@ -105,40 +145,6 @@ namespace Fy.Services
             Services.Clear();
         }
 
-        private static T GetService<T>() where T : class, IService
-        {
-            Initialize(typeof(T), out ServiceWrapper serviceWrapper);
-            return GetService<T>(serviceWrapper);
-        }
-
-        private static T GetService<T>(ServiceWrapper serviceWrapper) where T : class, IService
-        {
-            if (serviceWrapper.Value.TryGetValid(out IService validService))
-            {
-                return (T)validService;
-            }
-
-            if (serviceWrapper.Factory == null)
-            {
-                return null;
-            }
-
-            IService createdService = serviceWrapper.Factory.GetService();
-
-            if (createdService.TryGetValid(out validService) && validService is T result)
-            {
-                if (serviceWrapper.Factory.ShouldSetService)
-                {
-                    serviceWrapper.Value = result;
-                }
-                
-                return result;
-            }
-            
-            createdService?.Dispose();
-            return null;
-        }
-        
         private static void Initialize(Type type, out ServiceWrapper serviceWrapper)
         {
             if (Services.TryGetValue(type, out serviceWrapper))
