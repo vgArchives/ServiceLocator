@@ -14,30 +14,45 @@ namespace Fy.Services
 
         public IService GetService()
         {
-            T existingService = Object.FindAnyObjectByType<T>();
-            if (existingService != null)
+            T[] existingServices = Object.FindObjectsByType<T>(FindObjectsInactive.Exclude);
+
+            if (existingServices.Length == 0)
             {
-                if (IsPersistent)
+                GameObject serviceObject = new GameObject(typeof(T).Name);
+                T createdService = serviceObject.AddComponent<T>();
+                HandlePersistenceState(createdService);
+
+                return createdService;
+            }
+
+            if (existingServices.Length > 1)
+            {
+                Debug.LogError($"Multiple '{typeof(T).Name}' service instances found " +
+                               $"({existingServices.Length}). Keeping the first; remove the extras.");
+            }
+
+            T existingService = existingServices[0];
+
+            for (int i = 1; i < existingServices.Length; i++)
+            {
+                if (existingServices[i].GetEntityId() < existingService.GetEntityId())
                 {
-                    PersistFound(existingService);
+                    existingService = existingServices[i];
                 }
-
-                return existingService;
             }
 
-            GameObject serviceObject = new GameObject(typeof(T).Name);
-            T createdService = serviceObject.AddComponent<T>();
+            HandlePersistenceState(existingService);
 
-            if (IsPersistent)
-            {
-                Object.DontDestroyOnLoad(serviceObject);
-            }
-
-            return createdService;
+            return existingService;
         }
 
-        private static void PersistFound(T service)
+        private static void HandlePersistenceState(T service)
         {
+            if (!IsPersistent)
+            {
+                return;
+            }
+
             if (service.transform.parent != null)
             {
                 Debug.LogError($"[PersistentService] '{typeof(T).Name}' was found as a child object and " +

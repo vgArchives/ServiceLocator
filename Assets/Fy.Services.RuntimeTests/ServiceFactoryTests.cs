@@ -175,6 +175,28 @@ namespace Fy.Services.RuntimeTests
             Assert.That(result, Is.SameAs(existing));
         }
 
+        /// <summary>When multiple instances exist in the scene, the actor factory logs an error and returns the lowest-InstanceID one deterministically.</summary>
+        [Test]
+        public void ActorFactory_WhenMultipleExist_LogsErrorAndReturnsDeterministicWinner()
+        {
+            var firstObject = new GameObject("ActorDummyA");
+            ActorDummy first = firstObject.AddComponent<ActorDummy>();
+            var secondObject = new GameObject("ActorDummyB");
+            ActorDummy second = secondObject.AddComponent<ActorDummy>();
+
+            ActorDummy expected = first.GetEntityId() < second.GetEntityId() ? first : second;
+
+            ServiceLocator.SetFactory<IActorDummyService>(DefaultServiceActorFactory<ActorDummy>.Instance);
+
+            LogAssert.Expect(LogType.Error, new Regex("Multiple .* service instances found"));
+            ServiceLocator.TryGet(out IActorDummyService result);
+
+            Assert.That(result, Is.SameAs(expected));
+
+            Object.DestroyImmediate(firstObject);
+            Object.DestroyImmediate(secondObject);
+        }
+
         /// <summary>A [PersistentService] MonoBehaviour created by the actor factory is moved to the DontDestroyOnLoad scene.</summary>
         [Test]
         public void PersistentActorFactory_WhenCreated_MovesToDontDestroyOnLoadScene()
