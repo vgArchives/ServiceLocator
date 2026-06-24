@@ -1,0 +1,19 @@
+{
+  "name": "com.fy.services",
+  "displayName": "Fy Service Locator",
+  "version": "0.1.0",
+  "unity": "6000.0",
+  "description": "A lightweight service locator for Unity with automatic registration.",
+  "author": {
+    "name": "vgArchives"
+  },
+  "license": "MIT",
+  "documentationUrl": "https://github.com/vgArchives/ServiceLocator/blob/main/Packages/com.fy.services/README.md",
+  "samples": [
+    {
+      "displayName": "Service Examples",
+      "description": "Examples covering the six service archetypes: plain, MonoBehaviour/actor, dynamic, required, preload, and abstract.",
+      "path": "Samples~/Examples"
+    }
+  ]
+}
