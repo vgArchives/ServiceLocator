@@ -2,6 +2,9 @@ using System;
 
 namespace Fy.Services
 {
+    /// <summary>
+    /// A read-only view of one registered service, passed to the editor window for display.
+    /// </summary>
     internal readonly struct ServiceSnapshot
     {
         public readonly Type InterfaceType;

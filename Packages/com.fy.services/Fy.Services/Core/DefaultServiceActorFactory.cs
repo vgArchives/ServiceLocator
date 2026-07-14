@@ -3,8 +3,16 @@ using UnityEngine;
 
 namespace Fy.Services
 {
+    /// <summary>
+    /// The default factory for a MonoBehaviour service, which cannot be created with <c>new</c>. Reuses an instance
+    /// already in the scene, or creates a GameObject and adds the component.
+    /// </summary>
+    /// <typeparam name="T">The concrete MonoBehaviour service class.</typeparam>
     public sealed class DefaultServiceActorFactory<T> : IServiceFactory where T : MonoBehaviour, IService
     {
+        /// <summary>
+        /// The shared instance. The factory holds no state, so one instance serves every request.
+        /// </summary>
         public static readonly DefaultServiceActorFactory<T> Instance = new();
 
         private static readonly bool IsPersistent =
@@ -12,6 +20,12 @@ namespace Fy.Services
 
         private DefaultServiceActorFactory() { }
 
+        /// <summary>
+        /// Returns the existing scene instance if there is one (keeping the earliest-created when several exist),
+        /// otherwise creates a new GameObject with the component. Applies
+        /// <see cref="PersistentServiceAttribute"/> when present.
+        /// </summary>
+        /// <returns>The service instance.</returns>
         public IService GetService()
         {
             T[] existingServices = Object.FindObjectsByType<T>(FindObjectsInactive.Exclude);

@@ -6,11 +6,22 @@ using UnityEngine;
 
 namespace Fy.Services
 {
+    /// <summary>
+    /// Scans your assemblies at startup, pairs each service interface with its implementation, and registers a
+    /// default factory for it, so services work without any manual setup.
+    /// </summary>
+    /// <remarks>
+    /// Runs automatically through Unity's startup callbacks. Only assemblies that reference this package are scanned,
+    /// keeping the search fast.
+    /// </remarks>
     public static class ServiceAutoLoader
     {
         private static Type[] _serviceTypes;
         private static (Type serviceInterface, Type implementation)[] _services;
 
+        /// <summary>
+        /// Registers a default factory for every discovered service. Runs at the earliest startup phase.
+        /// </summary>
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         internal static void AutoRegisterAll()
         {
@@ -30,6 +41,10 @@ namespace Fy.Services
 #endif
         }
 
+        /// <summary>
+        /// Eagerly builds every service marked <see cref="PreloadServiceAttribute"/> before the first scene loads,
+        /// instead of waiting for the first request.
+        /// </summary>
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         internal static void PreloadAll()
         {
@@ -44,6 +59,10 @@ namespace Fy.Services
             }
         }
         
+        /// <summary>
+        /// Logs an error for any <see cref="RequiredServiceAttribute"/> service that has no factory, catching the
+        /// problem at startup instead of when <see cref="ServiceLocator.GetChecked{T}"/> throws later.
+        /// </summary>
         internal static void ValidateRequiredServices()
         {
             foreach (Type type in GetServiceTypes())
@@ -63,6 +82,10 @@ namespace Fy.Services
             }
         }
 
+        /// <summary>
+        /// Logs an error when <see cref="PersistentServiceAttribute"/> is placed on a non-MonoBehaviour service,
+        /// where it has no effect.
+        /// </summary>
         internal static void ValidatePersistentServices()
         {
             foreach (Type type in GetServiceTypes())
