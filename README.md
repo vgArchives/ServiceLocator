@@ -119,7 +119,7 @@ ServiceLocator.SetFactory<IFooService>(new FooFactory());
 
 To see the current state of services, open **Window → Fy → Service Locator**. In Play Mode the window lists every registered service and whether each one is resolved, lazy, or empty, along with its attributes. Mark a field or property with `[ShowInServiceWindow]` to watch its value change live while the game runs.
 
-![ The Service Locator window inspecting live services in Play Mode](Documentation/images/service-locator-window.png)
+![The Service Locator window inspecting live services in Play Mode](Packages/com.fy.services/Documentation/images/service-locator-window.png)
 
 ## Examples
 
