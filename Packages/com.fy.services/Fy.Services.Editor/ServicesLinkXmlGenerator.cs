@@ -10,10 +10,14 @@ using UnityEditor.UnityLinker;
 
 namespace Fy.Services.Editor
 {
-    // Services are found by reflection, so IL2CPP's code stripper can't see them
-    // being used and may delete them from the build. Unity calls this during the
-    // build to ask for extra preservation rules. We list every service class and
-    // tell the stripper to keep it. Editor-only, runs at build time.
+    /// <summary>
+    /// Keeps service classes from being stripped out of IL2CPP builds.
+    /// </summary>
+    /// <remarks>
+    /// Services are found by reflection, so the code stripper can't see them being used and may delete them. Unity
+    /// calls this at build time to ask for extra preservation rules; it lists every service class and tells the
+    /// stripper to keep it. Editor-only, runs during the build.
+    /// </remarks>
     public sealed class ServicesLinkXmlGenerator : IUnityLinkerProcessor
     {
         public int callbackOrder => 0;

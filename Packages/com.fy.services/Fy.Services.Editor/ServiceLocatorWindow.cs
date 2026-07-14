@@ -12,6 +12,9 @@ using UnityEngine.UIElements;
 
 namespace Fy.Services.Editor
 {
+    /// <summary>
+    /// Editor window that lists the registered services and their state. Open it from Window/Fy/Service Locator.
+    /// </summary>
     public sealed class ServiceLocatorWindow : EditorWindow
     {
         private const BindingFlags MemberFlags =
