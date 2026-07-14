@@ -108,7 +108,7 @@ namespace Fy.Services
 
             if (createdService.TryGetValid(out validService) && type.IsInstanceOfType(validService))
             {
-                if (serviceWrapper.Factory.ShouldSetService)
+                if (serviceWrapper.Factory.ShouldCacheService)
                 {
                     serviceWrapper.Value = validService;
                 }

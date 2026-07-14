@@ -58,7 +58,7 @@ namespace Fy.Services.RuntimeTests
 
         private sealed class TransientFactory : IServiceFactory
         {
-            public bool ShouldSetService => false;
+            public bool ShouldCacheService => false;
 
             public IService GetService()
             {
@@ -96,9 +96,9 @@ namespace Fy.Services.RuntimeTests
             ServiceLocator.Reset();
         }
 
-        /// <summary>A transient factory (ShouldSetService false) returns a fresh instance of each request.</summary>
+        /// <summary>A transient factory (ShouldCacheService false) returns a fresh instance of each request.</summary>
         [Test]
-        public void Factory_WithShouldSetServiceFalse_DoesNotCacheInstance()
+        public void Factory_WithShouldCacheServiceFalse_DoesNotCacheInstance()
         {
             ServiceLocator.SetFactory<IDummyService>(new TransientFactory());
 
@@ -110,9 +110,9 @@ namespace Fy.Services.RuntimeTests
             Assert.That(first, Is.Not.SameAs(second));
         }
 
-        /// <summary>A caching factory (ShouldSetService true) returns the same instance on repeated requests.</summary>
+        /// <summary>A caching factory (ShouldCacheService true) returns the same instance on repeated requests.</summary>
         [Test]
-        public void Factory_WithShouldSetServiceTrue_CachesInstance()
+        public void Factory_WithShouldCacheServiceTrue_CachesInstance()
         {
             ServiceLocator.SetFactory<IDummyService>(DefaultServiceFactory<DummyService>.Instance);
 

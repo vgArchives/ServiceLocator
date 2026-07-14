@@ -2,7 +2,7 @@ namespace Fy.Services
 {
     public interface IServiceFactory
     {
-        bool ShouldSetService => true;
+        bool ShouldCacheService => true;
 
         IService GetService();
     }
